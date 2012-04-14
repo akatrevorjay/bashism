@@ -1,0 +1,12 @@
+#!/bin/bash
+## ~trevorj 041312
+. ./bashism/bashism
+
+$b.set hooks.path="$PWD/hooks.d"
+$b.hooks.run init
+
+e hi
+error error
+debug debug
+death death
+
