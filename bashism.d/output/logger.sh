@@ -26,14 +26,14 @@ if [[ -z "${__BASHISM[path]}" ]]; then
 
 		if [[ "${log:0:16}" == '^BASHISM:logger$' ]]; then
 			
-			for i in ${log:0:17}; do
+			for i in ${log:17}; do
 				k="${i%%=*}"; v="${i#*=}"
 
 				case "$k" in
-					level)	level="$v"	;;
-					func)	func="$v"	;;
-					source)	source="$v"	;;
-					hook)	hook="$v"	;;
+					level)	BASHISM_OUTPUT_LEVEL="$v"	;;
+					func)	BASHISM_OUTPUT_FUNC="$v"	;;
+					source)	BASHISM_OUTPUT_SOURCE="$v"	;;
+					hook)	BASHISM_OUTPUT_HOOK="$v"	;;
 					'##')	break		;;
 					#*)		continue	;;
 				esac
@@ -50,9 +50,9 @@ if [[ -z "${__BASHISM[path]}" ]]; then
 			pr_nl=0
 		fi
 		
-		case "$level" in
-			debug|error|death)	"$level" "$log"	;;
-			*)	e "$log" ;;
+		case "$BASHISM_OUTPUT_LEVEL" in
+			debug|warning|error|death) "$BASHISM_OUTPUT_LEVEL" "$log" ;;
+			*) e "$log" ;;
 		esac
 	done
 
@@ -64,27 +64,30 @@ fi
 ## {{{ Bashism include
 
 ## Recursive checks
-#echo "$BASHISM_RECURSION"
-#[[ "$BASHISM_RECURSION" != "output/logger" ]] || (echo "It looks like I am being run recursively. Something is wrong." >&2; exit 1)
+[[ "$BASHISM_RECURSION" == "output/logger" ]] && \
+	(echo "It looks like I am being run within a logger instance but the logger instance didn't run." >&2;
+	 echo "Something is wrong. Aborting to avoid booty loops." >&2; exit 1)
 export BASHISM_RECURSION="output/logger"
+
 #coproc logger { "${__BASHISM[path]}/bashism.d/logger.sh"; }
+#exec 1>${logger[1]} 2>&1
+
+## Tell the logger coproc what to log as
+echo "${__BASHISM[script_self]}"
 
 ## }}}
-
-echo "${__BASHISM[script_self]}"
 
 ## {{{ Normal app output
 function bashism.output.logger.send {
 
 	local level="${FUNCNAME[1]}"
 	case "$level" in
-		debug|info|error|death) ;;
-		#e)		level="info"	;;
-		*)		level="info"	;;
+		debug|warning|error|death) ;;
+		*) level="info" ;;
 	esac
 
 	## Find what generated this output
-	local j=0 i= func=; for i in ${FUNCNAME[@]:1:3}; do case "$i" in
+	local j=1 i= func=; for i in ${FUNCNAME[@]:2:3}; do case "$i" in
 		*) j=$(($j + 1)) ;;&
 		#debug|e|info|error|death)			continue ;;
 		#$HOOK|main|source)					break ;;
@@ -99,11 +102,12 @@ function bashism.output.logger.send {
 }
 
 ## Output functions
-function debug	{ bashism.output.logger.send "$@"; }
-function e		{ bashism.output.logger.send "$@"; }
-function info	{ bashism.output.logger.send "$@"; }
-function error	{ bashism.output.logger.send "$@"; }
-function death  {
+function debug		{ bashism.output.logger.send "$@"; }
+function e			{ bashism.output.logger.send "$@"; }
+function info		{ bashism.output.logger.send "$@"; }
+function warning	{ bashism.output.logger.send "$@"; }
+function error		{ bashism.output.logger.send "$@"; }
+function death  	{
 	bashism.output.logger.send "$@"
 	[[ "$HOOK_TYPE" == "cleanup" ]] || exit 1
 }

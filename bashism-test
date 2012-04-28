@@ -6,6 +6,7 @@ e "About to start local hooks"
 $b.hooks.run init
 
 e "Hello, this is an info message"
+warning "Hello, this is a warning message"
 error "This is an error message"
 debug "This is a debug message"
 echo -n "test"
