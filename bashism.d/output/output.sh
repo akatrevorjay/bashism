@@ -1,13 +1,16 @@
 #!/bin/bash
 
-bashism.var.set script.self="${0##*/}"
+## {{{ Syslog logger coproc
 
-coproc logger { logger -p "local7.info" -t "${__BASHISM[script.self]}[$$]"; }
+coproc logger { logger -p "local7.info" -t "${__BASHISM[script_self]}[$$]"; }
+#coproc logger_formatter {}
 
 #coproc logger { sed -re "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g" -e 's/%pad%\s+//g' -e 's/%\w{3,10}%//g'| logger -p "local7.info" -t "bashism"; }
 #coproc logger { sed -e "s@^@[`date`] @" >> "${__BASHISM[logger.file]}"; }
 
-## Normal app output
+## }}}
+
+## {{{ Normal app output
 function e {
 	# Set default color
 	[[ -n "$COLOR" ]] || local COLOR="%light_gray%"
@@ -41,43 +44,6 @@ function death  {
 	COLOR="%red%%bold%" e DEATH: "$@" >&2
 	[[ "$HOOK_TYPE" == "cleanup" ]] || exit 1
 }
-
-## Don't show std(out|err) for "$@"
-function nullify_out { [[ ! "$__BASHISM_DEBUG" ]] || ("$@" >/dev/null; return $?); "$@"; }
-function nullify_err { [[ ! "$__BASHISM_DEBUG" ]] || ("$@" 2>&1 >/dev/null; return $?); "$@"; }
-
-function bashiam.output.rpad {
-	for word in "${@:3}"; do
-		while [ ${#word} -lt $1 ]; do word="$word$2"; done
-		while [ ${#word} -gt $1 ]; do word=${word:0:$((${#word}-1))}; done
-		echo "$word"
-	done
-}
-
-function bashism.output.lpad {
-	for word in "${@:3}"; do
-		while [ ${#word} -lt $1 ]; do word="$2$word"; done
-		while [ ${#word} -gt $1 ]; do word=${word:1:$((${#word}-1))}; done
-		echo "$word"
-	done
-}
-
-function bashism.output.cpad {
-	for word in "${@:3}"; do
-		while [ ${#word} -lt $1 ]; do
-			word="$word$2";
-			if [ ${#word} -lt $1 ]; then
-				word="$2$word"
-			fi;
-		done;
-		while [ ${#word} -gt $1 ]; do
-			word=${word:0:$((${#word}-1))}
-			if [ ${#word} -gt $1 ]; then
-				word=${word:1:$((${#word}-1))}
-			fi;
-		done
-		echo "$word"
-	done
-}
+## }}}
 
 

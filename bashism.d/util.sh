@@ -10,5 +10,5 @@ function bashism.util.split() {
 }
 
 ## -> b.util.is_function($name)
-function bashism.util.is_function() { declare -f -F "$1" > /dev/null; }
+function bashism.util.is_function() { declare -f -F "$1" >/dev/null 2>&1; }
 

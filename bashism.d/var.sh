@@ -13,7 +13,9 @@ function bashism.var.set() {
 ## Gets bashism variables
 function bashism.var.get() {
 	local i=; for i in "$@"; do
-		echo "${__BASHISM["$i"]}"
+		builtin echo "${__BASHISM["$i"]}"
 	done
 }
+
+bashism.cmd_path.push var
 

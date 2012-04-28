@@ -7,12 +7,24 @@
 ##
 ## ~trevorj <[github@skywww.net]>
 ##
+
+## {{{ Shell opts
 set -eE
 shopt -s nullglob
 shopt -s extglob
-declare -A __BASHISM=([path]="${BASH_SOURCE[0]%/*}" [cmd_path]="bashism bashism.var")
+## }}}
 
-## Look for relevant cmdline args
+# {{{ Vars
+[[ -n "${__BASHISM[path]}" ]]			|| \
+	declare -A __BASHISM=( \
+        [path]="${BASHISM_PATH:-${BASH_SOURCE[0]%/*}}" \
+	)
+
+[[ -n "${__BASHISM[cmd_path]}" ]]		|| __BASHISM[cmd_path]="bashism bashism.var bashism.util"
+[[ -n "${__BASHISM[script_self]}" ]]	|| __BASHISM[script_self]="${0##*/}"
+# }}}
+
+## {{{ Look for relevant cmdline args
 while getopts "dqtc" opt; do case "$opt" in
 	## Turn on extended debugging if we're debugging
 	d)	__BASHISM[debug]=0; shopt -s extdebug ;;
@@ -21,10 +33,25 @@ while getopts "dqtc" opt; do case "$opt" in
 	t)	__BASHISM[trace]=0; set -xv ;;
 	c)	__BASHISM[colors]=0; ;;
 esac; done; shift $((OPTIND-1)); OPTIND=1
+## }}}
 
-## -> b.cmd($cmd, @args)
+## {{{ Things to look into later
+##### BASH_XTRACEFD
+# If  set to an integer corresponding to a valid file descriptor,
+# bash will write the trace  output  generated  when  set  -x  is
+# enabled to that file descriptor.  The file descriptor is closed
+# when BASH_XTRACEFD is unset or assigned a new value.  Unsetting
+# BASH_XTRACEFD or assigning it the empty string causes the trace
+# output to be sent to the standard  error.   Note  that  setting
+# BASH_XTRACEFD  to  2  (the  standard error file descriptor) and
+# then unsetting it will  result  in  the  standard  error  being
+# closed.
+## }}}
+
+## {{{ -> b.cmd($cmd, @args)
 function bashism.cmd() {
-	local cmd="${1#.}"
+	local cmd="$1"
+	[[ "${cmd:0:1}" != "." ]] || cmd="${cmd:1}"
 
 	case "cmd" in
 		b.*)		cmd="bashism.${cmd#b.}" ;;
@@ -32,13 +59,12 @@ function bashism.cmd() {
 	esac
 
 	local i=; for i in '' ${__BASHISM[cmd_path]}; do
-		[[ -z "$i" ]] || i="$i."
-		declare -f -F "$i$cmd" >/dev/null || continue
-		"$i$cmd" "${@:2}"; return $?
+		declare -f -F "$i.$cmd" >/dev/null 2>&1 || continue
+		"$i.$cmd" "${@:2}"; return $?
 	done
 
-	for i in "${cmd#*.}"; do
-		i="${__BASHISM[$i]}"
+	for i in "$cmd"; do
+		i="${__BASHISM[$i]}" || continue
 		[[ -n "$i" ]] || continue
 		echo "$i"; return 0
 	done
@@ -47,19 +73,34 @@ function bashism.cmd() {
 }
 
 b="bashism.cmd "; this="$b this"
+## }}}
 
-## -> b.include(@args)
+## {{{ -> b.include(@args)
 function bashism.include() {
-	local i=; for i in "$@"; do
-		i="${__BASHISM[path]}/bashism.d/${i}.sh"
-		[[ -f "$i" ]] && . "$i" || exit 1
+	local i= i_path= j=; for i in "$@"; do
+		i_path="${__BASHISM[path]}/bashism.d"
+
+		for j in "$i_path/$i.sh" "$i_path/${i//./\/}.sh"; do
+			[[ ! -f "$j" ]] || . "$j" || exit 1
+		done
 	done
 }
+## }}}
 
-## Trap errors to cleanup afterwards
+## {{{ -> b.cmd_path.push(@args)
+function bashism.cmd_path.push() {
+	for i in "$@"; do
+		__BASHISM[cmd_path]="${__BASHISM[cmd_path]} $i"
+	done
+}
+## }}}
+
+## {{{ Trap errors to cleanup afterwards
 function bashism.on_error() {
 	trap - INT TERM EXIT
-	bashism.hooks.run on_error cleanup
+	if declare -f -F 'bashism.hooks.run' >/dev/null 2>&1; then
+		bashism.hooks.run on_error cleanup
+	fi
 	exit 1
 }
 trap bashism.on_error INT TERM EXIT
@@ -67,12 +108,23 @@ trap bashism.on_error INT TERM EXIT
 ## Disable trap then exit
 function bashism.exit() {
 	trap - INT TERM EXIT
-	exit $1
+	exit ${1-0}
 }
+## }}}
 
-## Core
-$b.include util var output colors hooks
+## {{{ Main
+$b.include util var output/common
 
-## Run init
-$b.hooks.run init
+## Extras
+if [[ -z "$BASHISM_MINIMAL" ]]; then
+    #$b.include logger hooks
+	$b.include output/output hooks
+
+    ## Run bashism hooks
+    $b.hooks.run init
+
+	## Set hooks directory from this point on to be local to the real script at hand
+	$b.set hooks.path="$PWD/hooks.d"
+fi
+## }}}
 
