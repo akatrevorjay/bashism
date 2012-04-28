@@ -45,16 +45,18 @@ if [[ -z "${__BASHISM[path]}" ]]; then
 			fi
 			log="${log#*## }"
 		fi
-		
+
+		case "$BASHISM_OUTPUT_LEVEL" in
+			e|info|debug|warning|error|death) ;;
+			*) BASHISM_OUTPUT_LEVEL="info" ;;
+		esac
+	
 		if [[ $pr_nl > 0 ]]; then
 			for i in `seq 1 $pr_nl`; do "$BASHISM_OUTPUT_LEVEL"; done
 			pr_nl=0
 		fi
 		
-		case "$BASHISM_OUTPUT_LEVEL" in
-			e|info|debug|warning|error|death) "$BASHISM_OUTPUT_LEVEL" "$log" ;;
-			#*) e "$log" ;;
-		esac
+		"$BASHISM_OUTPUT_LEVEL" "$log"
 	done
 
 	$b.exit 0
