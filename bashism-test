@@ -3,7 +3,6 @@
 . ./bashism
 
 e "About to start local hooks"
-$b.set hooks.path="$PWD/hooks.d"
 $b.hooks.run init
 
 e "Hello, this is an info message"
