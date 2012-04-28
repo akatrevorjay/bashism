@@ -1,6 +1,6 @@
 #!/bin/bash
 
-## -> b.split($by, $str)
+## {{{ -> b.split($by, $str)
 ## If $by is empty, split by $IFS into array $ret
 function bashism.util.split() {
 	ret=()
@@ -8,7 +8,11 @@ function bashism.util.split() {
 		ret[${#ret[@]}]="$i"
 	done
 }
+## }}}
 
-## -> b.util.is_function($name)
+## {{{ -> b.util.is_function($name)
 function bashism.util.is_function() { declare -f -F "$1" >/dev/null 2>&1; }
+## }}}
+
+bashism.cmd_path.push util
 
