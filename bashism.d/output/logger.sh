@@ -11,7 +11,7 @@ if [[ -z "${__BASHISM[path]}" ]]; then
 
 	# Get initial settings
 	read log
-	[[ "${log:0:17}" == "^BASHISM:logger$ " ]] || \
+	[[ "${log:0:17}" == "^BASHISM:logger$ " || "$__BASHISM[trace]" ]] || \
 		(echo "Cannot understand what is supposed to be output.logger input." >&2; exit 1)
 	__BASHISM[script_self]="${log:17}"
 
@@ -70,48 +70,35 @@ fi
 	 echo "Something is wrong. Aborting to avoid booty loops." >&2; exit 1)
 export BASHISM_RECURSION="output/logger"
 
-_prefixout () {
-    fd="$1"
-    fdp="${fd#/dev/fd/}"
-    shift
-
-    echo "fd=$fd fdp=$fdp args=$*" >&$fdp
-    echo "$@" >&$fdp                                                                
-    "$@" >&$fdp-
-}
-
-prefixout () {
-    prefix="$1"
-    shift
-    _prefixout >(sed -e 's/^/test/g') "$@" 
-}
-
-getfd() {
-	fd="$1"
-	fdp="${fd#/dev/fd/}"
-}
-
 export BASHISM_DEBUG="${__BASHISM[debug]}"
 export BASHISM_QUIET="${__BASHISM[quiet]}"
-export BASHISM_TRACE="${__BASHISM[trace]}"
+#export BASHISM_TRACE="${__BASHISM[trace]}"
 export BASHISM_COLORS="${__BASHISM[colors]}"
 
-set -b
+#set -b
 
-BASHISM_STDOUT_ORIGINAL=3
-BASHISM_STDERR_ORIGINAL=4
+#BASHISM_STDOUT_ORIGINAL=3
+#BASHISM_STDERR_ORIGINAL=4
 exec 3>&1 4>&2
 #exec 1> >("${__BASHISM[path]}/bashism.d/output/logger.sh")
 getfd >("${__BASHISM[path]}/bashism.d/output/logger.sh")
-exec 1>&$fdp-
-exec 2>&1
-
-
+BASHISM_OUTPUT_LOGGER_FD="${ret[0]}"
+exec 1>&$BASHISM_OUTPUT_LOGGER_FD 2>&1
+#0<"${__BASHISM[path]}/tmp0"}
+#exec 2>&1
 
 ## Tell the logger coproc what to log as
 echo "^BASHISM:logger$ ${__BASHISM[script_self]}"
 
 ## }}}
+
+function bashism.output.exit {
+    ## This helps avoid lag between the output and main processes which uglifies my tty
+    ## If anyone has a better way of waiting for a command spawned via process substitution
+    ## to catch up with it's buffers, let me know.
+	wait
+    sleep 5
+}
 
 ## {{{ Normal app output
 function bashism.output.logger.send {

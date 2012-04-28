@@ -1,5 +1,29 @@
 #!/bin/bash
 
+## {{{ TODO Prefix output functions
+
+_prefixout () {
+	getfd "$1"; shift
+	local fd="${ret[0]}"
+
+	#echo "fd=$fd args=$*"
+    "$@" >&${fd}
+	echo >&${fd}-
+}
+
+prefixout () {
+    prefix="$1"; shift
+    eval _prefixout >(sed -e 's/^/test/g') "$@" 
+}
+
+## {{{ -> getfd($fd) -- Leaves $ret[0] with the fd number of $1
+getfd() {
+	unset ret; ret=()
+	ret[0]="${1#/dev/fd/}"
+}
+## }}}
+
+
 ## {{{ Nullify out functions
 ## --- Don't show std(out|err) for "$@"
 function nullout		{ "$@" >/dev/null; }
