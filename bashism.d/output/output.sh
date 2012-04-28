@@ -1,5 +1,7 @@
 #!/bin/bash
 
+$b.include colors
+
 ## {{{ Syslog logger coproc
 
 coproc logger { logger -p "local7.info" -t "${__BASHISM[script_self]}[$$]"; }
