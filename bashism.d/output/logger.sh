@@ -10,8 +10,10 @@ if [[ -z "${__BASHISM[path]}" ]]; then
 	. "${0%/*}/../../bashism"
 
 	# Get initial settings
-	read name
-	__BASHISM[script_self]="$name"
+	read log
+	[[ "${log:0:17}" == "^BASHISM:logger$ " ]] || \
+		(echo "Cannot understand what is supposed to be output.logger input." >&2; exit 1)
+	__BASHISM[script_self]="${log:17}"
 
 	# Load standard output
 	$b.include output/output
@@ -19,12 +21,12 @@ if [[ -z "${__BASHISM[path]}" ]]; then
 	# Logger loop
 	pr_nl=0; level=info
 	while read log; do
-		if [[ "$log" == "" ]]; then
-			let pr_nl+=1
+		if [[ -z "$log" ]]; then
+			pr_nl=$(($pr_nl + 1))
 			continue
 		fi
 
-		if [[ "${log:0:16}" == '^BASHISM:logger$' ]]; then
+		if [[ "${log:0:17}" == '^BASHISM:logger$ ' ]]; then
 			
 			for i in ${log:17}; do
 				k="${i%%=*}"; v="${i#*=}"
@@ -35,7 +37,6 @@ if [[ -z "${__BASHISM[path]}" ]]; then
 					source)	BASHISM_OUTPUT_SOURCE="$v"	;;
 					hook)	BASHISM_OUTPUT_HOOK="$v"	;;
 					'##')	break		;;
-					#*)		continue	;;
 				esac
 			done
 
@@ -61,7 +62,7 @@ fi
 
 ## }}}
 
-## {{{ Bashism include
+## {{{ Run this script through process substitution to simulate decent logging functionality in bash
 
 ## Recursive checks
 [[ "$BASHISM_RECURSION" == "output/logger" ]] && \
@@ -69,11 +70,46 @@ fi
 	 echo "Something is wrong. Aborting to avoid booty loops." >&2; exit 1)
 export BASHISM_RECURSION="output/logger"
 
-#coproc logger { "${__BASHISM[path]}/bashism.d/logger.sh"; }
-#exec 1>${logger[1]} 2>&1
+_prefixout () {
+    fd="$1"
+    fdp="${fd#/dev/fd/}"
+    shift
+
+    echo "fd=$fd fdp=$fdp args=$*" >&$fdp
+    echo "$@" >&$fdp                                                                
+    "$@" >&$fdp-
+}
+
+prefixout () {
+    prefix="$1"
+    shift
+    _prefixout >(sed -e 's/^/test/g') "$@" 
+}
+
+getfd() {
+	fd="$1"
+	fdp="${fd#/dev/fd/}"
+}
+
+export BASHISM_DEBUG="${__BASHISM[debug]}"
+export BASHISM_QUIET="${__BASHISM[quiet]}"
+export BASHISM_TRACE="${__BASHISM[trace]}"
+export BASHISM_COLORS="${__BASHISM[colors]}"
+
+set -b
+
+BASHISM_STDOUT_ORIGINAL=3
+BASHISM_STDERR_ORIGINAL=4
+exec 3>&1 4>&2
+#exec 1> >("${__BASHISM[path]}/bashism.d/output/logger.sh")
+getfd >("${__BASHISM[path]}/bashism.d/output/logger.sh")
+exec 1>&$fdp-
+exec 2>&1
+
+
 
 ## Tell the logger coproc what to log as
-echo "${__BASHISM[script_self]}"
+echo "^BASHISM:logger$ ${__BASHISM[script_self]}"
 
 ## }}}
 

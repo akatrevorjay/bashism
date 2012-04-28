@@ -15,6 +15,7 @@ shopt -s extglob
 ## }}}
 
 # {{{ Vars
+## Defaults
 [[ -n "${__BASHISM[path]}" ]]			|| \
 	declare -A __BASHISM=( \
         [path]="${BASHISM_PATH:-${BASH_SOURCE[0]%/*}}" \
@@ -22,18 +23,29 @@ shopt -s extglob
 
 [[ -n "${__BASHISM[cmd_path]}" ]]		|| __BASHISM[cmd_path]="bashism bashism.var bashism.util"
 [[ -n "${__BASHISM[script_self]}" ]]	|| __BASHISM[script_self]="${0##*/}"
+
+## Passthrough defaults
+[[ -z "$BASHISM_DEBUG" ]]	|| __BASHISM[debug]="$BASHISM_DEBUG"
+[[ -z "$BASHISM_QUIET" ]]	|| __BASHISM[quiet]="$BASHISM_QUIET"
+[[ -z "$BASHISM_TRACE" ]]	|| __BASHISM[trace]="$BASHISM_TRACE"
+[[ -z "$BASHISM_COLORS" ]]	|| __BASHISM[colors]="$BASHISM_COLORS"
+
 # }}}
 
 ## {{{ Look for relevant cmdline args
 while getopts "dqtc" opt; do case "$opt" in
 	## Turn on extended debugging if we're debugging
-	d)	__BASHISM[debug]=0; shopt -s extdebug ;;
-	q)	__BASHISM[quiet]=0; ;;
+	d)	__BASHISM[debug]=0 ;;
+	q)	__BASHISM[quiet]=0 ;;
 	## Start tracing if requested
-	t)	__BASHISM[trace]=0; set -xv ;;
-	c)	__BASHISM[colors]=0; ;;
+	t)	__BASHISM[trace]=0 ;;
+	c)	__BASHISM[colors]=0 ;;
 esac; done; shift $((OPTIND-1)); OPTIND=1
-## }}}
+
+[[ ! "${__BASHISM[debug]}" ]] || shopt -s extdebug
+[[ ! "${__BASHISM[trace]}" ]] || set -xv
+
+# }}}
 
 ## {{{ Things to look into later
 ##### BASH_XTRACEFD
@@ -100,17 +112,45 @@ function bashism.cmd_path.push() {
 
 ## {{{ Trap errors to cleanup afterwards
 function bashism.on_error() {
+	## Do not show remaining trace once an error has occurred
+	set +xv
+
 	trap - INT TERM EXIT
 	if declare -f -F 'bashism.hooks.run' >/dev/null 2>&1; then
 		bashism.hooks.run on_error cleanup
 	fi
+
+	if [[ -n "$BASHISM_STDOUT_ORIGINAL" ]]; then
+		exec >&-
+		exec >&$BASHISM_STDERR_ORIGINAL
+	fi
+	if [[ -n "$BASHISM_STDOUT_ORIGINAL" ]]; then
+		exec 2>&-
+		exec 2>&$BASHISM_STDERR_ORIGINAL
+	fi
+	exec 63>&-
+	wait
+	sleep 2
+
 	exit 1
 }
-trap 'set +xv; bashism.on_error' INT TERM EXIT
+trap bashism.on_error INT TERM EXIT
 
 ## Disable trap then exit
 function bashism.exit() {
 	trap - INT TERM EXIT
+
+	if [[ -n "$BASHISM_STDOUT_ORIGINAL" ]]; then
+		exec >&-
+		exec >&$BASHISM_STDERR_ORIGINAL
+	fi
+	if [[ -n "$BASHISM_STDOUT_ORIGINAL" ]]; then
+		exec 2>&-
+		exec 2>&$BASHISM_STDERR_ORIGINAL
+	fi
+	wait
+	sleep 2
+
 	exit ${1-0}
 }
 ## }}}
