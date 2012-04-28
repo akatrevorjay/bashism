@@ -47,13 +47,13 @@ if [[ -z "${__BASHISM[path]}" ]]; then
 		fi
 		
 		if [[ $pr_nl > 0 ]]; then
-			for i in `seq 1 $pr_nl`; do echo; done
+			for i in `seq 1 $pr_nl`; do "$BASHISM_OUTPUT_LEVEL"; done
 			pr_nl=0
 		fi
 		
 		case "$BASHISM_OUTPUT_LEVEL" in
-			debug|warning|error|death) "$BASHISM_OUTPUT_LEVEL" "$log" ;;
-			*) e "$log" ;;
+			e|info|debug|warning|error|death) "$BASHISM_OUTPUT_LEVEL" "$log" ;;
+			#*) e "$log" ;;
 		esac
 	done
 
@@ -97,7 +97,7 @@ function bashism.output.exit {
     ## If anyone has a better way of waiting for a command spawned via process substitution
     ## to catch up with it's buffers, let me know.
 	wait
-    sleep 5
+    sleep 1
 }
 
 ## {{{ Normal app output

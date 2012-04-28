@@ -56,7 +56,7 @@ function warning 	{ COLOR="%blue%" bashism.output.output "$@"; }
 function error		{ COLOR="%red%%bold%" bashism.output.output ERROR: "$@" >&2; }
 function death		{
 	COLOR="%red%%bold%" bashism.output.output DEATH: "$@" >&2
-	[[ "$HOOK_TYPE" == "cleanup" ]] || exit 1
+	[[ "$BASHISM_RECURSION" == "output/logger" || "$HOOK_TYPE" == "cleanup" ]] || exit 1
 }
 ## }}}
 

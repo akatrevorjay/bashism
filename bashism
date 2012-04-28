@@ -113,14 +113,14 @@ function bashism.cmd_path.push() {
 ## {{{ Trap errors to cleanup afterwards
 function bashism.on_error() {
 	## Do not show remaining trace once an error has occurred
-#set +xv
+	set +xv
 
 	trap - INT TERM EXIT
 	if declare -f -F 'bashism.hooks.run' >/dev/null 2>&1; then
 		bashism.hooks.run on_error cleanup
 	fi
 
-	if declare -F -p bashism.output.exit >/dev/null 2>&1; then
+	if declare -f -F 'bashism.output.exit' >/dev/null 2>&1; then
 		bashism.output.exit 1
 	fi
 
@@ -132,8 +132,8 @@ trap bashism.on_error INT TERM EXIT
 function bashism.exit() {
 	trap - INT TERM EXIT
 
-	if declare -F -p bashism.output.exit >/dev/null 2>&1; then
-		bashism.output.exit 1
+	if declare -f -F 'bashism.output.exit' >/dev/null 2>&1; then
+		bashism.output.exit ${1-0}
 	fi
 
 	exit ${1-0}
