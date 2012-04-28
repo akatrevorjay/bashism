@@ -81,7 +81,10 @@ function bashism.include() {
 		i_path="${__BASHISM[path]}/bashism.d"
 
 		for j in "$i_path/$i.sh" "$i_path/${i//./\/}.sh"; do
-			[[ ! -f "$j" ]] || . "$j" || exit 1
+			if [[ -f "$j" ]]; then
+				. "$j" || exit 1
+				break
+			fi
 		done
 	done
 }
@@ -103,7 +106,7 @@ function bashism.on_error() {
 	fi
 	exit 1
 }
-trap bashism.on_error INT TERM EXIT
+trap 'set +xv; bashism.on_error' INT TERM EXIT
 
 ## Disable trap then exit
 function bashism.exit() {
@@ -117,8 +120,7 @@ $b.include util var output/common
 
 ## Extras
 if [[ -z "$BASHISM_MINIMAL" ]]; then
-    #$b.include logger hooks
-	$b.include output/output hooks
+    $b.include output/logger hooks
 
     ## Run bashism hooks
     $b.hooks.run init
