@@ -1,12 +1,25 @@
-#!/bin/bash
+#!/bin/bash -e
 ## ~trevorj 041312
-. ./bashism/bashism
+. ./bashism
 
+e "About to start local hooks"
 $b.set hooks.path="$PWD/hooks.d"
 $b.hooks.run init
 
-e hi
-error error
-debug debug
+e "Hello, this is an info message"
+error "This is an error message"
+debug "This is a debug message"
+echo -n "test"
+echo "A word \"test\" is prefixing this message without a newline."
+
+echo "ifconfig start"
+ifconfig
+echo "ifconfig end"
+
+e "test info test test test"
+e "this is a test"
+error "Testing error"
+
 death death
+
 
