@@ -38,7 +38,7 @@ while getopts "dqtc" OPT; do case "$OPT" in
 	q)	__BASHISM[quiet]=0 ;;
 	t)	__BASHISM[trace]=0 ;;
 	c)	__BASHISM[colors]=0 ;;
-esac; done
+esac; done; shift $(($OPTIND - 1))
 
 [[ ! "${__BASHISM[debug]}" ]] || shopt -s extdebug
 [[ ! "${__BASHISM[trace]}" ]] || set -xv
