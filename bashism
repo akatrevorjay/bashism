@@ -33,14 +33,12 @@ shopt -s extglob
 # }}}
 
 ## {{{ Look for relevant cmdline args
-while getopts "dqtc" opt; do case "$opt" in
-	## Turn on extended debugging if we're debugging
+while getopts "dqtc" OPT; do case "$OPT" in
 	d)	__BASHISM[debug]=0 ;;
 	q)	__BASHISM[quiet]=0 ;;
-	## Start tracing if requested
 	t)	__BASHISM[trace]=0 ;;
 	c)	__BASHISM[colors]=0 ;;
-esac; done; shift $((OPTIND-1)); OPTIND=1
+esac; done
 
 [[ ! "${__BASHISM[debug]}" ]] || shopt -s extdebug
 [[ ! "${__BASHISM[trace]}" ]] || set -xv
