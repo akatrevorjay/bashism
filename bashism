@@ -145,7 +145,7 @@ $b.include util var output/common
 
 ## Extras
 if [[ -z "$BASHISM_MINIMAL" ]]; then
-    $b.include output/logger hooks
+    $b.include ${BASHISM_OUTPUT:-"output/logger"} hooks
 
     ## Run bashism hooks
     $b.hooks.run init
