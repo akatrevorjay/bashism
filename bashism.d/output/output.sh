@@ -26,7 +26,7 @@ function bashism.output.output {
 			*) j=$(($j + 1)) ;;&
 			debug|e|error|info|death)			continue ;;
 			#$HOOK|main|source)					break ;;
-			*) local BASHISM_OUTPUT_FUNC="${i}: ";	break ;;
+			*) local BASHISM_OUTPUT_FUNC="$i";	break ;;
 		esac; done
 	fi
 
