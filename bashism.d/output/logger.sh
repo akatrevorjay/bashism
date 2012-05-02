@@ -94,6 +94,7 @@ echo "^BASHISM:logger$ ${__BASHISM[script_self]}"
 
 ## }}}
 
+## {{{ bashism.output.exit
 function bashism.output.exit {
     ## This helps avoid lag between the output and main processes which uglifies my tty
     ## If anyone has a better way of waiting for a command spawned via process substitution
@@ -101,6 +102,7 @@ function bashism.output.exit {
 	wait
     sleep 1
 }
+## }}}
 
 ## {{{ Normal app output
 function bashism.output.logger.send {

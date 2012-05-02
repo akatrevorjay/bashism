@@ -1,10 +1,12 @@
 #!/bin/bash
 
+## {{{ Init 
 $b.include colors
+## }}}
 
 ## {{{ Syslog logger coproc
 [[ -z "$BASHISM_OUTPUT_SYSLOG" ]] || \
-	coproc logger { logger -p "local7.info" -t "${__BASHISM[script_self]}[$$]"; }
+    coproc logger { logger -p "local7.info" -t "${__BASHISM[script_self]}[$$]"; }
 ## }}}
 
 ## {{{ Normal app output
@@ -59,5 +61,4 @@ function death		{
 	[[ "$BASHISM_RECURSION" == "output/logger" || "$HOOK_TYPE" == "cleanup" ]] || exit 1
 }
 ## }}}
-
 
