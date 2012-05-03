@@ -14,5 +14,8 @@ function bashism.util.split() {
 function bashism.util.is_function() { declare -f -F "$1" >/dev/null 2>&1; }
 ## }}}
 
+## {{{ -> b.util.check_lock($name)
+       
+
 bashism.cmd_path.push util
 

@@ -7,7 +7,8 @@ if [[ -z "${__BASHISM[path]}" ]]; then
 	export BASHISM_MINIMAL=0
 
 	# Load bashism
-	. "${0%/*}/../../bashism"
+    unset BASHISM_RECURSION
+	. "${BASH_SOURCE[0]%/*}/../../bashism"
 
 	# Get initial settings
 	read log

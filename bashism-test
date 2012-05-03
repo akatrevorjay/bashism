@@ -1,25 +1,78 @@
 #!/bin/bash -e
 ## ~trevorj 041312
+#BASHISM_MINIMAL=0
+declare -x -r BASHISM_COLORS=0
+BASHISM_OUTPUT=output/output
 . ./bashism
 
-e "About to start local hooks"
-$b.hooks.run init
+header()    { echo -e "\n>>"    Begin   "$*";   }
+footer()    { echo -e "<<"      End     "$*\n"; }
+subheader() { echo -e "\n===>>"    Begin   "$*";   }
+subfooter() { echo -e "===<<"      End     "$*\n"; }
 
-e "Hello, this is an info message"
-warning "Hello, this is a warning message"
-error "This is an error message"
-debug "This is a debug message"
-echo -n "test"
-echo "A word \"test\" is prefixing this message without a newline."
+block_normal() {
+    (
+        unset "${!__BASHISM@}" "${!BASHISM@}"
+        . ./bashism
 
-echo "ifconfig start"
-ifconfig
-echo "ifconfig end"
+        e "About to start local hooks"
+        $b.hooks.run init
 
-e "test info test test test"
-e "this is a test"
-error "Testing error"
+        e "Hello, this is an info message"
+        warning "Hello, this is a warning message"
+        error "This is an error message"
+        debug "This is a debug message"
+        echo -n "test"
+        echo "A word \"test\" is prefixing this message without a newline."
 
-death death
+        echo "ifconfig start"
+        ifconfig
+        echo "ifconfig end"
 
+        e "test info test test test"
+        e "this is a test"
+        error "Testing error"
+
+        death "To this block"
+    ) && echo "Block was supposed to fail but succeeded?" || true
+}
+
+block_output() {
+    for OUTPUT in output/{output,logger{,:syslog}}; do
+        subheader "$OUTPUT"
+        (
+            unset "${!__BASHISM@}" "${!BASHISM@}"
+            [[ "${OUTPUT#*:}" != "syslog" ]] || BASHISM_SYSLOG=0
+            BASHISM_OUTPUT="${OUTPUT#*:}"
+            . ./bashism
+
+            e "This was written using $BASHISM_OUTPUT"
+            debug "Debug with $BASHISM_OUTPUT"
+            error "Error with $BASHISM_OUTPUT"
+            echo "This is an echo using $BASHISM_OUTPUT"
+
+            subheader "$OUTPUT recursive"
+            (
+                BASHISM_OUTPUT="output/logger"
+                . ./bashism
+                
+                e "WTF"
+                e "This was written using output/logger"
+                debug "Debug with output/logger"
+                warning "Warning with $BASHISM_OUTPUT"
+                error "Error with output/logger"
+                echo "This is an echo using output/logger"
+            )
+            subfooter "$OUTPUT recursive"
+        ) && echo "Block was supposed to fail but succeeded?" || true
+        subfooter "$OUTPUT"
+    done
+}
+
+for i in block_normal block_output; do
+    for j in header '' footer; do
+        [[ -z "$j" ]] || j+=" "
+        $j"$i"
+    done
+done
 

@@ -16,6 +16,8 @@ prefixout () {
     eval _prefixout >(sed -e 's/^/test/g') "$@" 
 }
 
+## }}}
+
 ## {{{ -> getfd($fd) -- Leaves $ret[0] with the fd number of $1
 getfd() {
 	unset ret; ret=()
