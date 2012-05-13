@@ -29,6 +29,20 @@ block_normal() {
     e "this is a test"
     error "Testing error"
 
+    e "Testing VARP"
+    e "- Setting testkey=testval"
+    $b.pset "testkey=testval"
+
+    e "- Getting testkey via \$ret"
+    $b.pget 'testkey'
+    [[ "${ret[0]}" == "testval" ]] || death "Got bad ret=${ret[0]}"
+    e "-- ret=${ret[0]}"
+
+    e "- Getting testkey via var=key"
+    $b.pget 'testget=testkey'
+    [[ "$testget" == "testval" ]] || death "Got bad testget=$testget"
+    e "-- testget=$testget"
+
     death "To this block (or true)" || true
 }
 

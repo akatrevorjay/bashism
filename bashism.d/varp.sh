@@ -12,18 +12,28 @@ function bashism.var.pset() {
 	done
 }
 
-## -> b.pget(@key)
-## Gets bashism varpiables
+## -> b.pget(@key|@var=key)
+## Gets bashism varpiables, places result into var if in var=key form
 function bashism.var.pget() {
-	local i=; for i in "$@"; do
-        # This is not exactly meant to be used with user data, so it's not shell safe
-        if [[ -f "${__BASHISM[VARP_DIR]}/$i" ]]; then
-            __BASHISM_VARP["$i"]=$(< "${__BASHISM[VARP_DIR]}/$i")
-        else
-            unset __BASHISM_VARP["$i"]
+	local i= v=; for i in "$@"; do
+        # If key=val form
+        v=; if [[ "$i" == *=* ]]; then
+            v="${i%%=*}"; i="${i#*=}"
         fi
 
-        builtin echo "${__BASHISM_VARP[$i]}"
+        if [[ -f "${__BASHISM[VARP_DIR]}/$i" ]]; then
+            __BASHISM_VARP[$i]=$(< "${__BASHISM[VARP_DIR]}/$i")
+        else
+            unset __BASHISM_VARP[$i]
+        fi
+
+        ret=("${__BASHISM_VARP[$i]}")
+
+        # If params were in key=val form
+        if [[ -n "$v" ]]; then
+            # Set var ${!key} equal to $val
+            eval $v=\"${ret[0]}\"
+        fi
 	done
 }
 
