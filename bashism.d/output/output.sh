@@ -40,11 +40,12 @@ function bashism.output.output {
 	[[ -n "$BASHISM_OUTPUT_HOOK" ]] || \
 		local BASHISM_OUTPUT_HOOK="$hook"
 
+    local date=$(printf "%(%F %I:%M%P)T" -1)
 	if [[ ! -z "${__BASHISM[colors]}" ]]; then
-		bashism.colors.colorize "$COLOR[`date`] %blue%[$(printf "%18s" "$BASHISM_OUTPUT_SOURCE")]"\
+		bashism.colors.colorize "$COLOR[$date] %blue%[$(printf "%18s" "$BASHISM_OUTPUT_SOURCE")]"\
 			"%white%[$(printf "%8s" "$BASHISM_OUTPUT_HOOK")] %white%${BASHISM_OUTPUT_FUNC}: ${COLOR}$*%light_gray%"
 	else
-		echo "[`date`] [$(printf "%18s" "$BASHISM_OUTPUT_SOURCE")] [$(printf "%8s" "$BASHISM_OUTPUT_HOOK")] ${BASHISM_OUTPUT_FUNC}: $*"
+		echo "[$date] [$(printf "%18s" "$BASHISM_OUTPUT_SOURCE")] [$(printf "%8s" "$BASHISM_OUTPUT_HOOK")] ${BASHISM_OUTPUT_FUNC}: $*"
 	fi
 
 	[[ -z "$BASHISM_OUTPUT_SYSLOG" ]] || \
@@ -58,7 +59,7 @@ function warning 	{ COLOR="%blue%" bashism.output.output "$@"; }
 function error		{ COLOR="%red%%bold%" bashism.output.output ERROR: "$@" >&2; }
 function death		{
 	COLOR="%red%%bold%" bashism.output.output DEATH: "$@" >&2
-	[[ "$BASHISM_RECURSION" == "output/logger" || "$HOOK_TYPE" == "cleanup" ]] || exit 1
+	[[ "$BASHISM_RECURSION" == "output/logger" || "$HOOK_TYPE" == "cleanup" ]] || return 1
 }
 ## }}}
 

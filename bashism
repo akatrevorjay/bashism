@@ -7,82 +7,35 @@
 ##
 ## ~trevorj <[github@skywww.net]>
 ##
-
-## {{{ Shell opts
-set -eE
-shopt -s nullglob
-shopt -s extglob
-## }}}
+set -e
+shopt -s nullglob extglob
+shopt -u sourcepath
 
 # {{{ Vars
 ## Defaults
-[[ -n "${__BASHISM[path]}" ]]			|| \
-	declare -A __BASHISM=( \
-        [path]="${BASHISM_PATH:-${BASH_SOURCE[0]%/*}}" \
-	)
+[[ -n "${__BASHISM[path]}" ]] || \
+    declare -A __BASHISM=( \
+        [path]="${BASH_SOURCE[0]%/*}" \
+        [script_self]="${0##*/}" \
+        )
 
-[[ -n "${__BASHISM[cmd_path]}" ]]		|| __BASHISM[cmd_path]="bashism bashism.var bashism.util"
-[[ -n "${__BASHISM[script_self]}" ]]	|| __BASHISM[script_self]="${0##*/}"
+[[ "${#__BASHISM_CMD_PATH[@]}" -gt 0 ]] || \
+    declare -A __BASHISM_CMD_PATH=([bashism]=0)
 
-## Passthrough defaults
-[[ -z "$BASHISM_DEBUG" ]]	|| __BASHISM[debug]="$BASHISM_DEBUG"
-[[ -z "$BASHISM_QUIET" ]]	|| __BASHISM[quiet]="$BASHISM_QUIET"
-[[ -z "$BASHISM_TRACE" ]]	|| __BASHISM[trace]="$BASHISM_TRACE"
-[[ -z "$BASHISM_COLORS" ]]	|| __BASHISM[colors]="$BASHISM_COLORS"
-
-# }}}
-
-## {{{ Look for relevant cmdline args
-while getopts "dqtc" OPT; do case "$OPT" in
-	d)	__BASHISM[debug]=0 ;;
-	q)	__BASHISM[quiet]=0 ;;
-	t)	__BASHISM[trace]=0 ;;
-	c)	__BASHISM[colors]=0 ;;
+## Look for relevant cmdline args
+while getopts "dqc" OPT; do case "$OPT" in
+    d)	BASHISM_DEBUG=0 ;;
+    q)	BASHISM_QUIET=0 ;;
+    c)	BASHISM_COLORS=0 ;;
 esac; done; shift $(($OPTIND - 1))
 
-[[ ! "${__BASHISM[debug]}" ]] || shopt -s extdebug
-[[ ! "${__BASHISM[trace]}" ]] || set -xv
-
-# }}}
-
-## {{{ Things to look into later
-##### BASH_XTRACEFD
-# If  set to an integer corresponding to a valid file descriptor,
-# bash will write the trace  output  generated  when  set  -x  is
-# enabled to that file descriptor.  The file descriptor is closed
-# when BASH_XTRACEFD is unset or assigned a new value.  Unsetting
-# BASH_XTRACEFD or assigning it the empty string causes the trace
-# output to be sent to the standard  error.   Note  that  setting
-# BASH_XTRACEFD  to  2  (the  standard error file descriptor) and
-# then unsetting it will  result  in  the  standard  error  being
-# closed.
-## }}}
-
-## {{{ -> b.cmd($cmd, @args)
-function bashism.cmd() {
-	local cmd="$1"
-	[[ "${cmd:0:1}" != "." ]] || cmd="${cmd:1}"
-
-	case "cmd" in
-		b.*)		cmd="bashism.${cmd#b.}" ;;
-		#this.*)	cmd="${__BASHISM[package]}.${cmd#this.}" ;;&
-	esac
-
-	local i=; for i in '' ${__BASHISM[cmd_path]}; do
-		declare -f -F "$i.$cmd" >/dev/null 2>&1 || continue
-		"$i.$cmd" "${@:2}"; return $?
-	done
-
-	for i in "$cmd"; do
-		i="${__BASHISM[$i]}" || continue
-		[[ -n "$i" ]] || continue
-		echo "$i"; return 0
-	done
-
-	return 127
-}
-
-b="bashism.cmd "; this="$b this"
+for i in debug quiet colors; do
+    k="BASHISM_${i^^}"
+    if [[ -n "${!k}" ]]; then
+        __BASHISM[$i]="${!k}"
+        #export $k="${!k}"
+    fi
+done
 ## }}}
 
 ## {{{ -> b.include(@args)
@@ -100,10 +53,34 @@ function bashism.include() {
 }
 ## }}}
 
+## {{{ -> b.cmd($cmd, @args)
+function bashism.cmd() {
+	local cmd="$1"
+    # If possible, remove frontal period
+	[[ "${cmd:0:1}" != "." ]] || cmd="${cmd:1}"
+
+    # Build cmd
+	case "cmd" in
+		b.*)		cmd="bashism.${cmd#b.}" ;;
+		#this.*)	cmd="${__BASHISM[package]}.${cmd#this.}" ;;&
+	esac
+
+    # Look for cmd in cmd_path
+	local i; for i in "${!__BASHISM_CMD_PATH[@]}"; do
+		declare -F "$i.$cmd" >/dev/null 2>&1 || continue
+		"$i.$cmd" "${@:2}"; return $?
+	done
+
+	return 127
+}
+
+b="bashism.cmd "; this="${b}this"
+## }}}
+
 ## {{{ -> b.cmd_path.push(@args)
 function bashism.cmd_path.push() {
 	for i in "$@"; do
-		__BASHISM[cmd_path]="${__BASHISM[cmd_path]} $i"
+        __BASHISM_CMD_PATH[$i]=0
 	done
 }
 ## }}}
@@ -111,35 +88,32 @@ function bashism.cmd_path.push() {
 ## {{{ Trap errors to cleanup afterwards
 function bashism.on_error() {
 	## Do not show remaining trace once an error has occurred
-	set +xv
+    #set +xv
 
 	trap - INT TERM EXIT
-	if declare -f -F 'bashism.hooks.run' >/dev/null 2>&1; then
+	if declare -F 'bashism.hooks.run' >/dev/null 2>&1; then
 		bashism.hooks.run on_error cleanup
-	fi
-
-	if declare -f -F 'bashism.output.exit' >/dev/null 2>&1; then
-		bashism.output.exit 1
 	fi
 
 	exit 1
 }
-trap bashism.on_error INT TERM EXIT
+trap bashism.on_error INT TERM ERR
 
 ## Disable trap then exit
 function bashism.exit() {
 	trap - INT TERM EXIT
 
-	if declare -f -F 'bashism.output.exit' >/dev/null 2>&1; then
+	if declare -F 'bashism.output.exit' >/dev/null 2>&1; then
 		bashism.output.exit ${1-0}
 	fi
 
-	exit ${1-0}
+	builtin exit ${1-0}
 }
+trap bashism.exit EXIT
 ## }}}
 
 ## {{{ Main
-$b.include util var output/common
+$b.include util var varp output/common
 
 ## Extras
 if [[ -z "$BASHISM_MINIMAL" ]]; then

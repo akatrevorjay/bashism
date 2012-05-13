@@ -11,11 +11,12 @@ function bashism.util.split() {
 ## }}}
 
 ## {{{ -> b.util.is_function($name)
-function bashism.util.is_function() { declare -f -F "$1" >/dev/null 2>&1; }
+function bashism.util.is_function() { declare -F "$1" >/dev/null 2>&1; }
 ## }}}
 
-## {{{ -> b.util.check_lock($name)
-       
+## {{{ -> getfd($fd) -- Leaves $ret[0] with the fd number of $1
+function bashism.util.getfd() { ret=("${1#/dev/fd/}"); }
+## }}}
 
-bashism.cmd_path.push util
+bashism.cmd_path.push 'bashism.util'
 

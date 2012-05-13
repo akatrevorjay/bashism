@@ -1,7 +1,7 @@
 #!/bin/bash -e
 ## ~trevorj 041312
 #BASHISM_MINIMAL=0
-declare -x -r BASHISM_COLORS=0
+#declare -x -r BASHISM_COLORS=0
 BASHISM_OUTPUT=output/output
 . ./bashism
 
@@ -11,38 +11,33 @@ subheader() { echo -e "\n===>>"    Begin   "$*";   }
 subfooter() { echo -e "===<<"      End     "$*\n"; }
 
 block_normal() {
-    (
-        unset "${!__BASHISM@}" "${!BASHISM@}"
-        . ./bashism
+    e "About to start local hooks"
+    $b.hooks.run init
 
-        e "About to start local hooks"
-        $b.hooks.run init
+    e "Hello, this is an info message"
+    warning "Hello, this is a warning message"
+    error "This is an error message"
+    debug "This is a debug message"
+    echo -n "test"
+    echo "A word \"test\" is prefixing this message without a newline."
 
-        e "Hello, this is an info message"
-        warning "Hello, this is a warning message"
-        error "This is an error message"
-        debug "This is a debug message"
-        echo -n "test"
-        echo "A word \"test\" is prefixing this message without a newline."
+    echo "ifconfig start"
+    ifconfig
+    echo "ifconfig end"
 
-        echo "ifconfig start"
-        ifconfig
-        echo "ifconfig end"
+    e "test info test test test"
+    e "this is a test"
+    error "Testing error"
 
-        e "test info test test test"
-        e "this is a test"
-        error "Testing error"
-
-        death "To this block"
-    ) && echo "Block was supposed to fail but succeeded?" || true
+    death "To this block (or true)" || true
 }
 
 block_output() {
     for OUTPUT in output/{output,logger{,:syslog}}; do
         subheader "$OUTPUT"
         (
-            unset "${!__BASHISM@}" "${!BASHISM@}"
-            [[ "${OUTPUT#*:}" != "syslog" ]] || BASHISM_SYSLOG=0
+            unset "${!__BASHISM@}" "BASHISM_OUTPUT"
+            #[[ "${OUTPUT#*:}" != "syslog" ]] || BASHISM_SYSLOG=0
             BASHISM_OUTPUT="${OUTPUT#*:}"
             . ./bashism
 
@@ -55,7 +50,7 @@ block_output() {
             (
                 BASHISM_OUTPUT="output/logger"
                 . ./bashism
-                
+
                 e "WTF"
                 e "This was written using output/logger"
                 debug "Debug with output/logger"
@@ -64,7 +59,7 @@ block_output() {
                 echo "This is an echo using output/logger"
             )
             subfooter "$OUTPUT recursive"
-        ) && echo "Block was supposed to fail but succeeded?" || true
+        )
         subfooter "$OUTPUT"
     done
 }

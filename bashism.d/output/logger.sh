@@ -28,7 +28,7 @@ if [[ -z "${__BASHISM[path]}" ]]; then
 		fi
 
 		if [[ "${log:0:17}" == '^BASHISM:logger$ ' ]]; then
-			
+
 			for i in ${log:17}; do
 				k="${i%%=*}"; v="${i#*=}"
 
@@ -51,12 +51,12 @@ if [[ -z "${__BASHISM[path]}" ]]; then
 			e|info|debug|warning|error|death) ;;
 			*) BASHISM_OUTPUT_LEVEL="info" ;;
 		esac
-	
+
 		if [[ $pr_nl > 0 ]]; then
 			for i in `seq 1 $pr_nl`; do "$BASHISM_OUTPUT_LEVEL"; done
 			pr_nl=0
 		fi
-		
+
 		"$BASHISM_OUTPUT_LEVEL" "$log"
 	done
 
@@ -68,15 +68,6 @@ fi
 ## {{{ Run this script through process substitution to simulate decent logging functionality in bash
 
 ## Recursive checks
-[[ "$BASHISM_RECURSION" == "output/logger" ]] && \
-	(echo "It looks like I am being run within a logger instance but the logger instance didn't run." >&2;
-	 echo "Something is wrong. Aborting to avoid booty loops." >&2; exit 1)
-export BASHISM_RECURSION="output/logger"
-
-export BASHISM_DEBUG="${__BASHISM[debug]}"
-export BASHISM_QUIET="${__BASHISM[quiet]}"
-#export BASHISM_TRACE="${__BASHISM[trace]}"
-export BASHISM_COLORS="${__BASHISM[colors]}"
 
 #set -b
 
@@ -84,7 +75,11 @@ export BASHISM_COLORS="${__BASHISM[colors]}"
 #BASHISM_STDERR_ORIGINAL=4
 exec 3>&1 4>&2
 #exec 1> >("${__BASHISM[path]}/bashism.d/output/logger.sh")
-getfd >("${__BASHISM[path]}/bashism.d/output/logger.sh")
+getfd >( \
+    BASHISM_COLORS="$BASHISM_COLORS" \
+    BASHISM_DEBUG="$BASHISM_DEBUG" \
+    BASHISM_QUIET="$BASHISM_QUIET" \
+    "${__BASHISM[path]}/bashism.d/output/logger.sh")
 BASHISM_OUTPUT_LOGGER_FD="${ret[0]}"
 exec 1>&$BASHISM_OUTPUT_LOGGER_FD 2>&1
 #0<"${__BASHISM[path]}/tmp0"}
@@ -137,7 +132,7 @@ function warning	{ bashism.output.logger.send "$@"; }
 function error		{ bashism.output.logger.send "$@"; }
 function death  	{
 	bashism.output.logger.send "$@"
-	[[ "$HOOK_TYPE" == "cleanup" ]] || exit 1
+	[[ "$HOOK_TYPE" == "cleanup" ]] || return 1
 }
 
 ## }}}
