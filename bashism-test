@@ -29,6 +29,9 @@ block_normal() {
     e "this is a test"
     error "Testing error"
 
+    e "Testing spark"
+    spark 1 50 33 4 1 2 4 5 99 4 65 15 19 78 44
+
     e "Testing VARP"
     e "- Setting testkey=testval"
     $b.pset "testkey=testval"
