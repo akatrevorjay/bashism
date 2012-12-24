@@ -1,5 +1,9 @@
 #!/bin/bash -e
-## ~trevorj 041312
+#
+# Simple test of some of bashism's functionality, hopefully this will be extended one day.
+# For debug and color output example, use "-dc"
+# ~trevorj 041312
+#
 #BASHISM_MINIMAL=0
 #declare -x -r BASHISM_COLORS=0
 BASHISM_OUTPUT=output/output
