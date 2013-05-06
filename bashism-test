@@ -52,7 +52,25 @@ block_normal() {
     e "-- testget=$testget"
 
     e "Testing getkwargs"
-    $b.test.getkwargs
+    function getkwargs_example() {
+        echo eval "$($b.getkwargs "$@")"
+        eval "$($b.getkwargs "$@")"
+        # Print structure of args and kwargs
+        declare -p args kwargs
+        # Positional
+        echo "First positional argument is \"${args[0]}\""
+        echo "Second positional argument is \"${args[1]}\""
+        # Keyword
+        local k= v=
+        for k in "${!kwargs[@]}"; do
+            v="${kwargs[$k]}"
+            echo "Keyword argument \"$k\"=\"$v\""
+        done
+    }
+    getkwargs_example omg=yes=yes2 arg0 arg1 munch=faces=whatsits
+    getkwargs_example "omg=yes=yes2 arg0" "arg1 munch=faces=whatsits"
+    getkwargs_example "omg=yes=yes2 arg0" "arg1 munch=faces=whatsits"
+    getkwargs_example "omg=yes=yes2 arg0" "arg1 munch=faces=whatsits"
 
     e "Testing template"
     what="The skipping %fox% went down the %horrid% road."
