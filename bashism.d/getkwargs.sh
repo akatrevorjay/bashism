@@ -3,6 +3,9 @@
 # getkwargs.sh
 #
 # -- Gives you simple Python-esque arguments in Bash
+#    ie: your_function_or_script never=always sync daemon=True
+#
+# TODO Enhance interface with standard opts support: -p|--path[=blah]
 #
 # ~trevorj 05/05/2013
 
