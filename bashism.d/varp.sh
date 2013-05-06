@@ -39,5 +39,5 @@ function bashism.var.pget() {
 
 __BASHISM[VARP_DIR]="${__BASHISM[path]}/var/varp"
 [[ -d "${__BASHISM[VARP_DIR]}" ]] || \
-    (warn "VARP_DIR=\"$varp_dir\" does not exist, creating it."; mkdir -p "${__BASHISM[VARP_DIR]}")
+    (warning "VARP_DIR=\"$varp_dir\" does not exist, creating it."; mkdir -p "${__BASHISM[VARP_DIR]}")
 
