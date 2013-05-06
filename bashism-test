@@ -19,6 +19,7 @@ block_normal() {
     $b.hooks.run init
 
     e "Hello, this is an info message"
+    warn "Hello, this is a warn message"
     warning "Hello, this is a warning message"
     error "This is an error message"
     debug "This is a debug message"
@@ -75,6 +76,7 @@ block_output() {
                 e "WTF"
                 e "This was written using output/logger"
                 debug "Debug with output/logger"
+                warn "Warn with $BASHISM_OUTPUT"
                 warning "Warning with $BASHISM_OUTPUT"
                 error "Error with output/logger"
                 echo "This is an echo using output/logger"

@@ -48,7 +48,7 @@ if [[ -z "${__BASHISM[path]}" ]]; then
 		fi
 
 		case "$BASHISM_OUTPUT_LEVEL" in
-			e|info|debug|warning|error|death) ;;
+			e|info|debug|warn|warning|error|death) ;;
 			*) BASHISM_OUTPUT_LEVEL="info" ;;
 		esac
 
@@ -105,7 +105,7 @@ function bashism.output.logger.send {
 
 	local level="${FUNCNAME[1]}"
 	case "$level" in
-		debug|warning|error|death) ;;
+		debug|warn|warning|error|death) ;;
 		*) level="info" ;;
 	esac
 
@@ -129,6 +129,7 @@ function debug		{ bashism.output.logger.send "$@"; }
 function e			{ bashism.output.logger.send "$@"; }
 function info		{ bashism.output.logger.send "$@"; }
 function warning	{ bashism.output.logger.send "$@"; }
+function warn       { bashism.output.logger.send "$@"; }
 function error		{ bashism.output.logger.send "$@"; }
 function death  	{
 	bashism.output.logger.send "$@"

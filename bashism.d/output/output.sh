@@ -18,7 +18,7 @@ function bashism.output.output {
 		local BASHISM_OUTPUT_LEVEL="${FUNCNAME[1]}"
 
 	case "$BASHISM_OUTPUT_LEVEL" in
-		debug|warning|error|death) ;;
+		debug|warn|warning|error|death) ;;
 		*) BASHISM_OUTPUT_LEVEL="info" ;;
 	esac
 
@@ -56,6 +56,7 @@ function debug		{ [[ ! "${__BASHISM[debug]}" ]] || COLOR="%green%" bashism.outpu
 function info		{ bashism.output.output "$@"; }
 function e			{ bashism.output.output "$@"; }
 function warning 	{ COLOR="%blue%" bashism.output.output "$@"; }
+function warn    	{ COLOR="%blue%" bashism.output.output "$@"; }
 function error		{ COLOR="%red%%bold%" bashism.output.output ERROR: "$@" >&2; }
 function death		{
 	COLOR="%red%%bold%" bashism.output.output DEATH: "$@" >&2
