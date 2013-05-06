@@ -33,11 +33,7 @@ function bashism.getkwargs.getkwargs() {
 
     ## Bash will munge the newlines during expansion if it's being expanded,
     ## so we need to make sure that there are no newlines, with a seperator.
-    local ret=
-    ret+="$(declare -p args)"
-    ret+=";"
-    ret+="$(declare -p kwargs)"
-    echo "$ret"
+    echo "$(declare -p args)"";""$(declare -p kwargs)"
 }
 
 
