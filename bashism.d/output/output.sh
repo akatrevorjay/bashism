@@ -42,8 +42,8 @@ function bashism.output.output {
 
     local date=$(printf "%(%F %I:%M%P)T" -1)
 	if [[ ! -z "${__BASHISM[colors]}" ]]; then
-		bashism.colors.colorize "$COLOR[$date] %blue%[$(printf "%18s" "$BASHISM_OUTPUT_SOURCE")]"\
-			"%white%[$(printf "%8s" "$BASHISM_OUTPUT_HOOK")] %white%${BASHISM_OUTPUT_FUNC}: ${COLOR}$*%light_gray%"
+		bashism.colors.colorize "$COLOR[$date]%white%[$(printf "%8s" "$BASHISM_OUTPUT_HOOK")] %white%${BASHISM_OUTPUT_FUNC}:"\
+            "${COLOR}$* %blue%@$BASHISM_OUTPUT_SOURCE%light_gray%"
 	else
 		echo "[$date] [$(printf "%18s" "$BASHISM_OUTPUT_SOURCE")] [$(printf "%8s" "$BASHISM_OUTPUT_HOOK")] ${BASHISM_OUTPUT_FUNC}: $*"
 	fi

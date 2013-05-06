@@ -51,6 +51,16 @@ block_normal() {
     [[ "$testget" == "testval" ]] || death "Got bad testget=$testget"
     e "-- testget=$testget"
 
+    e "Testing getkwargs"
+    $b.test.getkwargs
+
+    e "Testing template"
+    what="The skipping %fox% went down the %horrid% road."
+    e "- Before: \"$what\""
+    e "- Template: fox=\"cat\" horrid=\"creepy\" none=\"should_not_appear\""
+    eval "$($b.template "$what" fox="cat" horrid="creepy" none="should_not_appear")"
+    e "- After: \"$ret\""
+
     death "To this block (or true)" || true
 }
 

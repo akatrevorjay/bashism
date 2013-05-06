@@ -29,28 +29,33 @@ function bashism.getkwargs.getkwargs() {
         fi
     done
 
-    declare -p args
-    # Bash will munge the newlines during expansion, make that OK
-    echo ';'
-    declare -p kwargs
+    ## Bash will munge the newlines during expansion if it's being expanded,
+    ## so we need to make sure that there are no newlines, with a seperator.
+    #echo "$(declare -p args); $(declare -p kwargs)"
+    local ret=
+    ret+="$(declare -p args)"
+    ret+=";"
+    ret+="$(declare -p kwargs)"
+    echo "$ret"
 }
 
 
-function bashism.test.getkwargs.test() {
+function bashism.getkwargs.test.getkwargs() {
     if [[ -n "$*" ]]; then
-        echo "--- Testing with \"$@\":"
+        e "--- Testing with \"$@\":"
         # Declare automatically makes variables local if you're in a function,
         # so don't be worried about your global scope getting mucked here ;)
-        eval $(getkwargs "$@")
+        eval "$(bashism.getkwargs.getkwargs "$@")"
         declare -p args kwargs
-        echo
         return
     fi
 
     # TODO Make this actually verify that the output == input, ie a test ;)
-    _test_getkwargs omg=yes=yes2 arg0 arg1 munch=faces=whatsits
-    _test_getkwargs "omg=yes=yes2 arg0" "arg1 munch=faces=whatsits"
-    _test_getkwargs "omg=yes=yes2 arg0" "arg1 munch=faces=whatsits"
-    _test_getkwargs "omg=yes=yes2 arg0" "arg1 munch=faces=whatsits"
+    bashism.getkwargs.test.getkwargs omg=yes=yes2 arg0 arg1 munch=faces=whatsits
+    bashism.getkwargs.test.getkwargs "omg=yes=yes2 arg0" "arg1 munch=faces=whatsits"
+    bashism.getkwargs.test.getkwargs "omg=yes=yes2 arg0" "arg1 munch=faces=whatsits"
+    bashism.getkwargs.test.getkwargs "omg=yes=yes2 arg0" "arg1 munch=faces=whatsits"
 }
 
+
+bashism.cmd_path.push bashism.getkwargs

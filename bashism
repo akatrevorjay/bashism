@@ -68,7 +68,10 @@ function bashism.cmd() {
     # Look for cmd in cmd_path
 	local i; for i in "${!__BASHISM_CMD_PATH[@]}"; do
 		declare -F "$i.$cmd" >/dev/null 2>&1 || continue
-		"$i.$cmd" "${@:2}"; return $?
+		#"$i.$cmd" "${@:2}"
+        shift; set -- "$i.$cmd" "$@"
+        "$@"
+        return $?
 	done
 
 	return 127
@@ -113,7 +116,7 @@ trap bashism.exit EXIT
 ## }}}
 
 ## {{{ Main
-$b.include util var varp output/common spark getkwargs
+$b.include util getkwargs var varp output/common spark
 
 ## Extras
 if [[ -z "$BASHISM_MINIMAL" ]]; then
